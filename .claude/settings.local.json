@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(npx tsc:*)",
+      "Bash(rm -f src/lib/test-alias.ts src/App.css)",
+      "Bash(rm -rf src/assets)",
+      "Bash(mkdir:*)",
+      "Bash(wc:*)",
+      "Bash(npm run:*)",
+      "Bash(ls C:/APPS/calistenia-app-source/*.css)",
+      "Bash(ls C:/APPS/calistenia-app-source/*.html)",
+      "Bash(powershell:*)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Users/isilb/AppData/Local/Programs//**)",
+      "Read(//c/c/Users/isilb/**)",
+      "Bash(gh auth:*)",
+      "Bash(git -C C:/APPS/calistenia-app status)",
+      "Bash(gh --version)"
+    ]
+  }
+}

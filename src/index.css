@@ -1,0 +1,98 @@
+/* Geist fonts — @import must precede all rules per CSS spec */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Variables ────────────────────────────────────────────────────── */
+:root {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --ink: #0c0c0c;
+  --ink-soft: #404040;
+  --muted: #8a8a8a;
+  --line: #ececec;
+  --line-strong: #d4d4d4;
+  --accent: #d4ff3a;       /* lime accent */
+  --accent-ink: #0c0c0c;
+  --accent-2: #16a34a;     /* green for success */
+  --warn: #f59e0b;
+  --bad: #ef4444;
+}
+
+/* ─── Reset global ─────────────────────────────────────────────────────── */
+html, body, #root { height: 100%; }
+body {
+  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior-y: none;
+}
+.font-mono { font-family: 'Geist Mono', ui-monospace, monospace; }
+
+/* ─── Scrollbar ────────────────────────────────────────────────────────── */
+.scroll-y { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.scroll-y::-webkit-scrollbar { width: 0; height: 0; }
+
+/* ─── Input cleanup ────────────────────────────────────────────────────── */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+
+/* ─── Tap feedback ─────────────────────────────────────────────────────── */
+button { -webkit-tap-highlight-color: transparent; }
+
+/* ─── Clases custom ────────────────────────────────────────────────────── */
+
+/* press animation */
+.press { transition: transform .12s ease, background-color .15s ease, border-color .15s ease, color .15s ease; }
+.press:active { transform: scale(0.97); }
+
+/* card */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; }
+.card-flat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+
+/* divider */
+.hairline { border-color: var(--line); }
+
+/* progress bar */
+.pbar { background: #ececec; border-radius: 999px; overflow: hidden; }
+.pbar > div { height: 100%; background: var(--ink); transition: width .35s ease; }
+
+/* selectable pill */
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--ink-soft); background: #fff; }
+.chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* tap target safety */
+.tap { min-height: 44px; }
+
+/* sticky safe area */
+.safe-bot { padding-bottom: calc(env(safe-area-inset-bottom, 0) + 6px); }
+.safe-top { padding-top: calc(env(safe-area-inset-top, 0) + 6px); }
+
+/* checkbox */
+.check {
+  width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid var(--line-strong);
+  display: inline-flex; align-items: center; justify-content: center; background: #fff;
+}
+.check.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+/* phone shell (desktop centrado) */
+.phone-shell { width: 100%; max-width: 440px; margin: 0 auto; min-height: 100vh; background: var(--bg); position: relative; }
+@media (min-width: 720px) {
+  body { background: #0c0c0c; }
+  .phone-shell { box-shadow: 0 30px 80px rgba(0,0,0,.35); border-radius: 28px; overflow: hidden; min-height: 92vh; margin-top: 4vh; margin-bottom: 4vh; }
+}
+
+/* toast */
+.toast { background: var(--ink); color: #fff; border-radius: 14px; padding: 12px 16px; font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+
+/* ─── Animaciones ──────────────────────────────────────────────────────── */
+@keyframes slideUp { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.anim-in { animation: slideUp .25s ease both; }
+
+@keyframes pop { 0% { transform: scale(.92); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.anim-pop { animation: pop .18s ease both; }
