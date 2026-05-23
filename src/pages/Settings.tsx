@@ -42,22 +42,23 @@ function calcMacros(form: FormState): Macros {
   return { protein, fat, carbs, kcal }
 }
 
-interface StepperProps {
-  value: number
-  min: number
-  max: number
-  onChange: (v: number) => void
-}
-
-function Stepper({ value, min, max, onChange }: StepperProps) {
-  return (
-    <div className="flex items-center gap-1">
-      <button onClick={() => onChange(Math.max(min, value - 1))} className="press w-10 h-10 rounded-xl bg-[var(--surface)] border border-[var(--line)] flex items-center justify-center"><I.minus size={14}/></button>
-      <div className="flex-1 h-10 rounded-xl bg-[var(--surface)] border border-[var(--line)] flex items-center justify-center font-mono font-semibold">{value}</div>
-      <button onClick={() => onChange(Math.min(max, value + 1))} className="press w-10 h-10 rounded-xl bg-[var(--surface)] border border-[var(--line)] flex items-center justify-center"><I.plus size={14}/></button>
-    </div>
-  )
-}
+// usado por Ubicación actual — reactivar junto con esa sección
+// interface StepperProps {
+//   value: number
+//   min: number
+//   max: number
+//   onChange: (v: number) => void
+// }
+//
+// function Stepper({ value, min, max, onChange }: StepperProps) {
+//   return (
+//     <div className="flex items-center gap-1">
+//       <button onClick={() => onChange(Math.max(min, value - 1))} className="press w-10 h-10 rounded-xl bg-[var(--surface)] border border-[var(--line)] flex items-center justify-center"><I.minus size={14}/></button>
+//       <div className="flex-1 h-10 rounded-xl bg-[var(--surface)] border border-[var(--line)] flex items-center justify-center font-mono font-semibold">{value}</div>
+//       <button onClick={() => onChange(Math.min(max, value + 1))} className="press w-10 h-10 rounded-xl bg-[var(--surface)] border border-[var(--line)] flex items-center justify-center"><I.plus size={14}/></button>
+//     </div>
+//   )
+// }
 
 function ExerciseDBSection() {
   const { toast } = useToast()
