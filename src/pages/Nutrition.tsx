@@ -116,9 +116,9 @@ export default function Nutrition() {
 
         {/* Quick add */}
         <div className="mt-4 grid grid-cols-3 gap-2">
-          <button onClick={() => { void addMeal(25, 'Porción 25 g') }} className="press tap rounded-2xl bg-[var(--ink)] text-white py-3 font-semibold">+25 g</button>
-          <button onClick={() => { void addMeal(15, 'Porción 15 g') }} className="press tap rounded-2xl bg-white border border-[var(--line-strong)] py-3 font-semibold">+15 g</button>
-          <button onClick={() => { void addMeal(10, 'Porción 10 g') }} className="press tap rounded-2xl bg-white border border-[var(--line-strong)] py-3 font-semibold">+10 g</button>
+          <button onClick={() => { void addMeal(25, 'Porción 25 g') }} className="press tap rounded-2xl bg-[var(--ink)] text-[var(--bg)] py-3 font-semibold">+25 g</button>
+          <button onClick={() => { void addMeal(15, 'Porción 15 g') }} className="press tap rounded-2xl bg-white border border-[var(--line-strong)] text-[var(--on-light)] py-3 font-semibold">+15 g</button>
+          <button onClick={() => { void addMeal(10, 'Porción 10 g') }} className="press tap rounded-2xl bg-white border border-[var(--line-strong)] text-[var(--on-light)] py-3 font-semibold">+10 g</button>
         </div>
 
         {/* Custom add */}
@@ -173,7 +173,7 @@ export default function Nutrition() {
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => { void addWater(-0.25) }} className="press w-10 h-10 rounded-xl bg-white border border-[var(--line)] flex items-center justify-center"><I.minus size={16}/></button>
-            <button onClick={() => { void addWater(0.25) }} className="press w-10 h-10 rounded-xl bg-[var(--ink)] text-white flex items-center justify-center"><I.plus size={16}/></button>
+            <button onClick={() => { void addWater(0.25) }} className="press w-10 h-10 rounded-xl bg-[var(--ink)] text-[var(--bg)] flex items-center justify-center"><I.plus size={16}/></button>
           </div>
         </div>
         <ProgressBar value={data.agua_litros || 0} max={goalWater} color="var(--ink)"/>

@@ -64,6 +64,7 @@ export interface Session {
   duracion_min: number    // minutos efectivos; 0 mientras draft
   notas: string
   draft?: boolean         // true = en progreso, false = finalizada
+  rutina_id?: string      // set para sesiones de rutina custom; null/absent para programa fijo
   ejercicios: EjercicioEnSesion[]
 }
 
@@ -114,6 +115,30 @@ export interface Comida {
 export interface Mobility {
   completada: boolean
   items: { [ejercicioId: string]: boolean }
+}
+
+// ─── Rutinas custom ───────────────────────────────────────────────────────
+// Clave de storage: "rutinas:{id}"
+// ejercicios: array embebido como jsonb, igual que sesiones.ejercicios.
+
+export interface RutinaEjercicio {
+  nombre: string             // nombre del ejercicio en español
+  exercisedb_id?: string     // id de ExerciseDB para el GIF, opcional
+  series_objetivo?: number
+  reps_objetivo?: string     // string libre: '8–12', 'AMRAP', etc. (modo 'reps')
+  nota?: string
+  modo?: 'reps' | 'tiempo'  // default implícito: 'reps' si ausente
+  duracion_seg?: number      // segundos por serie; solo aplica en modo 'tiempo'
+  descanso_seg?: number      // descanso tras el ejercicio en segundos; default 45
+}
+
+export interface Rutina {
+  id: string
+  nombre: string
+  descripcion: string
+  ejercicios: RutinaEjercicio[]
+  creada_en: string          // ISO 8601; lo provee Supabase al insertar
+  // user_id no va en el tipo de dominio — lo maneja el adapter via sesión
 }
 
 // ─── Configuración de la app ──────────────────────────────────────────────────

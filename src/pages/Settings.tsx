@@ -1,8 +1,16 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
+import { useAuth } from "@/hooks/useAuth"
 import { getStorage } from "@/lib/storage"
+import { searchExerciseByName } from "@/lib/exercisedb/client"
+import type { PingResult } from "@/lib/exercisedb/types"
 import { todayKey } from "@/lib/utils"
-import { Card, Button, Input, SectionHeader, ProgressBar, Modal, I, useToast } from "@/components/ui"
-import type { Profile, RoutineState } from "@/types"
+import { applyTheme, getStoredTheme } from "@/lib/theme"
+import type { ThemeName } from "@/lib/theme"
+import { Card, Button, Input, SectionHeader, Modal, I, useToast, Spinner } from "@/components/ui"
+import type { Profile } from "@/types"
+import { GIFS_AUTHORIZED_EMAILS } from "@/data/authorized"
+// PLAN FIJO DESACTIVADO — reactivable
+// import type { RoutineState } from "@/types"
 
 interface FormState {
   nombre: string
@@ -44,41 +52,246 @@ interface StepperProps {
 function Stepper({ value, min, max, onChange }: StepperProps) {
   return (
     <div className="flex items-center gap-1">
-      <button onClick={() => onChange(Math.max(min, value - 1))} className="press w-10 h-10 rounded-xl bg-white border border-[var(--line)] flex items-center justify-center"><I.minus size={14}/></button>
-      <div className="flex-1 h-10 rounded-xl bg-white border border-[var(--line)] flex items-center justify-center font-mono font-semibold">{value}</div>
-      <button onClick={() => onChange(Math.min(max, value + 1))} className="press w-10 h-10 rounded-xl bg-white border border-[var(--line)] flex items-center justify-center"><I.plus size={14}/></button>
+      <button onClick={() => onChange(Math.max(min, value - 1))} className="press w-10 h-10 rounded-xl bg-[var(--surface)] border border-[var(--line)] flex items-center justify-center"><I.minus size={14}/></button>
+      <div className="flex-1 h-10 rounded-xl bg-[var(--surface)] border border-[var(--line)] flex items-center justify-center font-mono font-semibold">{value}</div>
+      <button onClick={() => onChange(Math.min(max, value + 1))} className="press w-10 h-10 rounded-xl bg-[var(--surface)] border border-[var(--line)] flex items-center justify-center"><I.plus size={14}/></button>
     </div>
   )
 }
 
-// TODO: reemplazar por implementación real de exercisedb en prompt futuro
-function DemosSection() {
+function ExerciseDBSection() {
+  const { toast } = useToast()
+  const [apiKey, setApiKey] = useState('')
+  const [showKey, setShowKey] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [pingState, setPingState] = useState<'idle' | 'probando' | 'resultado' | 'error'>('idle')
+  const [pingResult, setPingResult] = useState<PingResult | null>(null)
+
+  useEffect(() => {
+    getStorage().getSettings().then((s) => {
+      setApiKey(s.apiKeys?.exercisedb ?? '')
+    })
+  }, [])
+
+  const saveKey = async () => {
+    setSaving(true)
+    try {
+      const storage = getStorage()
+      const s = await storage.getSettings()
+      await storage.setSettings({ ...s, apiKeys: { ...(s.apiKeys ?? {}), exercisedb: apiKey.trim() } })
+      toast('API key guardada')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const probe = async () => {
+    setPingState('probando')
+    setPingResult(null)
+    const result = await searchExerciseByName('push up', apiKey.trim())
+    setPingResult(result)
+    setPingState(result.ok ? 'resultado' : 'error')
+  }
+
   return (
     <>
-      <SectionHeader kicker="ExerciseDB" title="Demos en vídeo"/>
-      <Card className="!p-0 overflow-hidden">
-        <div className="p-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <div>
-              <div className="text-[10px] uppercase tracking-widest text-[var(--muted)]">Catálogo</div>
-              <div className="font-mono text-xl mt-1">0<span className="text-[var(--muted)] text-xs font-normal"> ejercicios</span></div>
-            </div>
-            <div className="text-right">
-              <div className="text-[10px] uppercase tracking-widest text-[var(--muted)]">Vinculados</div>
-              <div className="font-mono text-xl mt-1">0<span className="text-[var(--muted)] text-xs font-normal">/0</span></div>
-            </div>
-          </div>
-          <div className="mt-3"><ProgressBar value={0} max={1} color="var(--accent-2)"/></div>
-          <div className="text-[11px] text-[var(--muted)] mt-2">
-            Sin catálogo. Integración con ExerciseDB próximamente.
+      <SectionHeader kicker="ExerciseDB" title="GIFs de ejercicios"/>
+      <Card className="flex flex-col gap-3">
+        <div>
+          <label className="text-xs text-[var(--muted)] mb-1.5 font-medium uppercase tracking-wide block">
+            API Key (RapidAPI)
+          </label>
+          <div className="flex gap-2">
+            <input
+              type={showKey ? 'text' : 'password'}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="Pega tu key de RapidAPI"
+              className="flex-1 h-12 px-4 rounded-xl border border-[var(--line)] bg-[var(--surface-input)] text-[var(--ink)] text-[13px] font-mono outline-none focus:border-[var(--ink)] transition-colors"
+            />
+            <button
+              className="press flex-shrink-0 h-12 px-3 rounded-xl border border-[var(--line)] bg-[var(--surface)] text-xs text-[var(--muted)]"
+              onClick={() => setShowKey(v => !v)}
+            >
+              {showKey ? 'Ocultar' : 'Ver'}
+            </button>
           </div>
         </div>
-        <div className="border-t hairline p-3">
-          <Button size="lg" variant="primary" icon={<I.refresh size={16}/>} disabled>
-            Cargar catálogo desde API
+
+        <Button size="block" variant="primary" icon={<I.check size={16}/>}
+          onClick={() => { void saveKey() }} disabled={saving}>
+          {saving ? 'Guardando…' : 'Guardar key'}
+        </Button>
+
+        <div className="border-t border-[var(--line)] pt-3">
+          <Button size="block" variant="soft" icon={<I.bolt size={16}/>}
+            onClick={() => { void probe() }} disabled={pingState === 'probando'}>
+            {pingState === 'probando' ? 'Probando…' : 'Probar conexión (push up)'}
           </Button>
         </div>
+
+        {pingResult && (
+          <div>
+            <div className={`text-xs font-medium mb-2 ${pingResult.ok ? 'text-green-600' : 'text-red-500'}`}>
+              {pingResult.ok ? `✓ OK · status ${pingResult.status}` : `✗ Error · status ${pingResult.status}`}
+              {pingResult.error ? ` — ${pingResult.error}` : ''}
+            </div>
+            <pre className="text-[11px] bg-[var(--bg)] rounded-xl p-3 overflow-auto max-h-64 border border-[var(--line)] text-[var(--ink)] whitespace-pre-wrap break-all">
+              {JSON.stringify(pingResult.raw, null, 2)}
+            </pre>
+          </div>
+        )}
       </Card>
+    </>
+  )
+}
+
+function BackupSection() {
+  const { toast } = useToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importing, setImporting] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
+  const [confirmImport, setConfirmImport] = useState(false)
+  const [pendingData, setPendingData] = useState<Record<string, unknown> | null>(null)
+
+  const handleExport = async () => {
+    try {
+      const storage = getStorage()
+      const raw = JSON.parse(await storage.exportAll()) as Record<string, unknown>
+      // Strip apiKeys — must not leave the device
+      if (raw['settings'] && typeof raw['settings'] === 'object') {
+        const s = { ...(raw['settings'] as Record<string, unknown>) }
+        delete s['apiKeys']
+        raw['settings'] = s
+      }
+      const backup = { version: 1, exported_at: new Date().toISOString(), data: raw }
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href     = url
+      a.download = `calisteniapp-backup-${new Date().toISOString().slice(0, 10)}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast('Backup exportado')
+    } catch (e) {
+      toast('Error al exportar: ' + String(e))
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImportError(null)
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string) as unknown
+        if (
+          typeof parsed !== 'object' || parsed === null ||
+          !('version' in parsed) || !('data' in parsed) ||
+          typeof (parsed as Record<string, unknown>)['data'] !== 'object'
+        ) {
+          setImportError('Archivo inválido: falta "version" o "data"')
+          return
+        }
+        setPendingData((parsed as { version: number; data: Record<string, unknown> }).data)
+        setConfirmImport(true)
+      } catch {
+        setImportError('No se pudo parsear el archivo JSON')
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  const doImport = async () => {
+    if (!pendingData) return
+    setImporting(true)
+    setConfirmImport(false)
+    try {
+      const data = { ...pendingData }
+      // Never import apiKeys
+      if (data['settings'] && typeof data['settings'] === 'object') {
+        const s = { ...(data['settings'] as Record<string, unknown>) }
+        delete s['apiKeys']
+        data['settings'] = s
+      }
+      await getStorage().importAll(JSON.stringify(data))
+      toast('Datos importados correctamente')
+      window.location.reload()
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      if (msg.startsWith('PARTIAL_IMPORT:')) {
+        // Algunos datos se escribieron, otros fallaron — dejar que el usuario vea qué falló
+        setImportError(msg.slice('PARTIAL_IMPORT:'.length).trim())
+      } else {
+        // Error de validación u otro — no se borró nada
+        setImportError(msg)
+      }
+      setImporting(false)
+      setPendingData(null)
+    }
+  }
+
+  return (
+    <>
+      <SectionHeader kicker="Datos" title="Backup"/>
+      <Card className="flex flex-col gap-3">
+        <div>
+          <div className="text-[13px] font-medium">Exportar datos</div>
+          <div className="text-xs text-[var(--muted)] mt-0.5">
+            Descarga sesiones, rutinas, perfil y nutrición como JSON. No incluye la API key.
+          </div>
+        </div>
+        <Button size="block" variant="soft" icon={<I.arrowDown size={16}/>}
+          onClick={() => { void handleExport() }}>
+          Exportar datos (JSON)
+        </Button>
+
+        <div className="border-t border-[var(--line)] pt-3 flex flex-col gap-2">
+          <div>
+            <div className="text-[13px] font-medium">Importar datos</div>
+            <div className="text-xs text-[var(--muted)] mt-0.5">
+              Carga un backup previo. Pisa todos los datos actuales.
+            </div>
+          </div>
+          <Button size="block" variant="soft" icon={<I.arrowUp size={16}/>}
+            onClick={() => fileInputRef.current?.click()} disabled={importing}>
+            {importing ? 'Importando…' : 'Importar datos (JSON)'}
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          {importError && (
+            <div className="text-xs text-red-500">{importError}</div>
+          )}
+        </div>
+      </Card>
+
+      <Modal open={confirmImport}
+        onClose={() => { setConfirmImport(false); setPendingData(null) }}
+        title="¿Importar backup?">
+        <div className="text-sm text-[var(--ink-soft)] mb-4">
+          Esto reemplazará <strong>todos los datos actuales</strong> con los del archivo.
+          La acción no se puede deshacer.
+        </div>
+        <div className="flex gap-2">
+          <Button variant="soft" className="flex-1"
+            onClick={() => { setConfirmImport(false); setPendingData(null) }}>
+            Cancelar
+          </Button>
+          <Button variant="danger" className="flex-1"
+            onClick={() => { void doImport() }}>
+            Sí, importar
+          </Button>
+        </div>
+      </Modal>
     </>
   )
 }
@@ -92,12 +305,18 @@ const OBJETIVOS: Array<{ id: Profile['objetivo']; label: string; sub: string }> 
 
 export default function Settings() {
   const { toast } = useToast()
+  const { signOut, user } = useAuth()
+
+  const userEmail = user?.email?.trim().toLowerCase() ?? ''
+  const canSeeGifs = GIFS_AUTHORIZED_EMAILS.map(e => e.trim().toLowerCase()).includes(userEmail)
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [routine, setRoutine] = useState<RoutineState>({ bloque_actual: 1, semana_actual: 1, dia_actual: 1 })
+  // PLAN FIJO DESACTIVADO — reactivable
+  // const [routine, setRoutine] = useState<RoutineState>({ bloque_actual: 1, semana_actual: 1, dia_actual: 1 })
   const [confirmReset, setConfirmReset] = useState(false)
+  const [theme, setTheme] = useState<ThemeName>(getStoredTheme)
 
   const [form, setForm] = useState<FormState>({
     nombre: '',
@@ -113,9 +332,10 @@ export default function Settings() {
     async function load() {
       try {
         const storage = getStorage()
-        const [prof, rout] = await Promise.all([
+        const [prof] = await Promise.all([
           storage.getProfile(),
-          storage.getRoutineState(),
+          // PLAN FIJO DESACTIVADO — reactivable
+          // storage.getRoutineState(),
         ])
         if (prof) {
           setProfile(prof)
@@ -129,7 +349,8 @@ export default function Settings() {
             fecha_inicio: prof.fecha_inicio ?? todayKey(),
           })
         }
-        if (rout) setRoutine(rout)
+        // PLAN FIJO DESACTIVADO — reactivable
+        // if (rout) setRoutine(rout)
       } catch (e) {
         setError(String(e))
       } finally {
@@ -173,11 +394,20 @@ export default function Settings() {
     toast('Perfil guardado')
   }
 
-  const updateRoutine = async (next: RoutineState) => {
+  const handleTheme = async (t: ThemeName) => {
+    setTheme(t)
+    applyTheme(t)
     const storage = getStorage()
-    await storage.setRoutineState(next)
-    setRoutine(next)
+    const s = await storage.getSettings()
+    await storage.setSettings({ ...s, tema: t })
   }
+
+  // PLAN FIJO DESACTIVADO — reactivable
+  // const updateRoutine = async (next: RoutineState) => {
+  //   const storage = getStorage()
+  //   await storage.setRoutineState(next)
+  //   setRoutine(next)
+  // }
 
   const handleReset = async () => {
     const storage = getStorage()
@@ -186,13 +416,24 @@ export default function Settings() {
     toast('Datos borrados')
   }
 
-  if (loading) return <div className="p-4 text-gray-500">Cargando...</div>
+  if (loading) return <div className="flex items-center justify-center p-16"><Spinner size={36}/></div>
   if (error) return <div className="p-4 text-red-600">{error}</div>
 
   return (
     <div className="px-4 pt-4 pb-28 anim-in">
       <div className="text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] font-medium">Tu perfil</div>
       <div className="text-[26px] font-semibold tracking-tight">Ajustes</div>
+
+      {/* Appearance */}
+      <SectionHeader kicker="Apariencia" title="Tema"/>
+      <div className="grid grid-cols-3 gap-2">
+        {([['light', 'Claro'], ['dark', 'Oscuro'], ['system', 'Sistema']] as [ThemeName, string][]).map(([id, label]) => (
+          <button key={id} onClick={() => { void handleTheme(id) }}
+            className={`press tap rounded-2xl p-3 border text-left ${theme === id ? 'bg-[var(--ink)] text-[var(--bg)] border-[var(--ink)]' : 'bg-[var(--surface)] text-[var(--ink)] border-[var(--line)]'}`}>
+            <div className="text-[13px] font-semibold leading-tight">{label}</div>
+          </button>
+        ))}
+      </div>
 
       {/* Profile */}
       <SectionHeader kicker="Datos personales" title="Identidad"/>
@@ -207,7 +448,7 @@ export default function Settings() {
             <div className="flex gap-1.5">
               {SEXOS.map(s => (
                 <button key={s} onClick={() => set('sexo', s)}
-                  className={`press flex-1 h-12 rounded-xl text-sm border ${form.sexo === s ? 'bg-[var(--ink)] text-white border-[var(--ink)]' : 'bg-white text-[var(--ink)] border-[var(--line)]'}`}>
+                  className={`press flex-1 h-12 rounded-xl text-sm border ${form.sexo === s ? 'bg-[var(--ink)] text-[var(--bg)] border-[var(--ink)]' : 'bg-[var(--surface)] text-[var(--ink)] border-[var(--line)]'}`}>
                   {s[0].toUpperCase() + s.slice(1)}
                 </button>
               ))}
@@ -222,9 +463,9 @@ export default function Settings() {
       <div className="grid grid-cols-3 gap-2">
         {OBJETIVOS.map(g => (
           <button key={g.id} onClick={() => set('objetivo', g.id)}
-            className={`press tap rounded-2xl p-3 border text-left ${form.objetivo === g.id ? 'bg-[var(--ink)] text-white border-[var(--ink)]' : 'bg-white text-[var(--ink)] border-[var(--line)]'}`}>
+            className={`press tap rounded-2xl p-3 border text-left ${form.objetivo === g.id ? 'bg-[var(--ink)] text-[var(--bg)] border-[var(--ink)]' : 'bg-[var(--surface)] text-[var(--ink)] border-[var(--line)]'}`}>
             <div className="text-[13px] font-semibold leading-tight">{g.label}</div>
-            <div className={`text-[11px] mt-0.5 ${form.objetivo === g.id ? 'text-white/60' : 'text-[var(--muted)]'}`}>{g.sub}</div>
+            <div className={`text-[11px] mt-0.5 ${form.objetivo === g.id ? 'opacity-60' : 'text-[var(--muted)]'}`}>{g.sub}</div>
           </button>
         ))}
       </div>
@@ -260,7 +501,7 @@ export default function Settings() {
 
       <Button size="block" variant="primary" className="mt-4" icon={<I.check size={18}/>} onClick={() => { void save() }}>Guardar perfil</Button>
 
-      {/* Program control */}
+      {/* PLAN FIJO DESACTIVADO — reactivable
       <SectionHeader kicker="Programa" title="Ubicación actual"/>
       <Card>
         <div className="flex items-center justify-between">
@@ -284,9 +525,13 @@ export default function Settings() {
           </div>
         </div>
       </Card>
+      */}
 
-      {/* Demos */}
-      <DemosSection/>
+      {/* ExerciseDB — solo usuarios autorizados */}
+      {canSeeGifs && <ExerciseDBSection/>}
+
+      {/* Backup */}
+      <BackupSection/>
 
       {/* Reset */}
       <SectionHeader kicker="Zona delicada" title="Borrar datos"/>
@@ -308,7 +553,14 @@ export default function Settings() {
         </div>
       </Modal>
 
-      <div className="mt-6 text-center text-xs text-[var(--muted)]">
+      {/* Session */}
+      <div className="mt-6 mb-2">
+        <Button size="block" variant="soft" icon={<I.logOut size={16}/>} onClick={() => { void signOut() }}>
+          Cerrar sesión
+        </Button>
+      </div>
+
+      <div className="mt-4 text-center text-xs text-[var(--muted)]">
         Calisteniapp · v1.0 · diseñada para ti
       </div>
     </div>

@@ -11,6 +11,7 @@ import type {
   Nutrition,
   Mobility,
   AppSettings,
+  Rutina,
 } from '@/types'
 
 const PREFIX = 'calisteniapp::'
@@ -24,6 +25,7 @@ const KEY_SETTINGS  = 'settings'
 const KEY_SESSION   = 'sessions:'
 const KEY_NUTRITION = 'nutrition:'
 const KEY_MOBILITY  = 'mobility:'
+const KEY_RUTINA    = 'rutinas:'
 
 const DEFAULT_SETTINGS: AppSettings = {
   tema: 'system',
@@ -112,6 +114,18 @@ export class LocalStorageAdapter implements StorageAdapter {
     this.removeKey(KEY_SESSION + date)
   }
 
+  async getUltimaSesionDeRutina(rutina_id: string): Promise<Session | null> {
+    const allKeys = this.keysWithSubPrefix(KEY_SESSION)
+    let latest: { date: string; session: Session } | null = null
+    for (const key of allKeys) {
+      const session = this.read<Session>(key)
+      if (!session || session.rutina_id !== rutina_id) continue
+      const date = key.slice(KEY_SESSION.length)
+      if (!latest || date > latest.date) latest = { date, session }
+    }
+    return latest?.session ?? null
+  }
+
   // ─── Nutrición ───────────────────────────────────────────────────────────────
 
   async getNutrition(date: string): Promise<Nutrition | null> {
@@ -155,6 +169,33 @@ export class LocalStorageAdapter implements StorageAdapter {
 
   async setSettings(s: AppSettings): Promise<void> {
     this.write(KEY_SETTINGS, s)
+  }
+
+  // ─── Rutinas custom ──────────────────────────────────────────────────────────
+
+  async listRutinas(): Promise<Rutina[]> {
+    const keys = this.keysWithSubPrefix(KEY_RUTINA)
+    const result: Rutina[] = []
+    for (const key of keys) {
+      const rutina = this.read<Rutina>(key)
+      if (rutina) result.push(rutina)
+    }
+    return result.sort((a, b) => a.creada_en.localeCompare(b.creada_en))
+  }
+
+  async getRutina(id: string): Promise<Rutina | null> {
+    return this.read<Rutina>(KEY_RUTINA + id)
+  }
+
+  async saveRutina(rutina: Rutina): Promise<void> {
+    const resolved: Rutina = rutina.id
+      ? rutina
+      : { ...rutina, id: crypto.randomUUID(), creada_en: new Date().toISOString() }
+    this.write(KEY_RUTINA + resolved.id, resolved)
+  }
+
+  async deleteRutina(id: string): Promise<void> {
+    this.removeKey(KEY_RUTINA + id)
   }
 
   // ─── Genéricos de bajo nivel ──────────────────────────────────────────────────

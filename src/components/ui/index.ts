@@ -24,3 +24,5 @@ export type { EmptyStateProps } from "./EmptyState"
 
 export { I } from "./icons"
 export type { IconProps } from "./icons"
+
+export { Spinner } from "./Spinner"

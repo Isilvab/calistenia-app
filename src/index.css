@@ -9,17 +9,60 @@
 :root {
   --bg: #f7f7f5;
   --surface: #ffffff;
+  --surface-input: #ffffff;
+  --surface-feature: #0c0c0c;
   --ink: #0c0c0c;
   --ink-soft: #404040;
-  --muted: #8a8a8a;
+  --muted: #6b6b6b;
   --line: #ececec;
   --line-strong: #d4d4d4;
   --accent: #d4ff3a;       /* lime accent */
   --accent-ink: #0c0c0c;
+  /* Static semantic tokens — never change between themes.
+     Use these whenever the background color is fixed (not theme-flipping). */
+  --on-light: #0c0c0c;   /* content on white/cream/light surfaces */
+  --on-dark: #f0f0f0;    /* content on near-black/dark surfaces */
   --accent-2: #16a34a;     /* green for success */
   --warn: #f59e0b;
   --bad: #ef4444;
 }
+
+/* ─── Dark mode ─────────────────────────────────────────────────────────── */
+html.dark {
+  color-scheme: dark;
+  --bg: #111111;
+  --surface: #1c1c1c;
+  --surface-input: #242424;
+  --surface-feature: #1e1e1e;
+  --ink: #f0f0f0;
+  --ink-soft: #b0b0b0;
+  --muted: #909090;
+  --line: #2c2c2c;
+  --line-strong: #3c3c3c;
+  --accent-ink: #0c0c0c;
+  --accent-2: #22c55e;
+}
+
+/* Theme switch — suppress all transitions while toggling */
+html.no-transition *,
+html.no-transition *::before,
+html.no-transition *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Dark: inputs */
+html.dark input:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=reset]):not([type=button]),
+html.dark textarea,
+html.dark select {
+  background-color: var(--surface-input) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+
+/* Dark: inverted button text fix (bg-[var(--ink)] uses light bg in dark → text must be dark) */
+html.dark .chip.on { color: var(--bg); }
+html.dark .check.on { color: var(--bg); }
 
 /* ─── Reset global ─────────────────────────────────────────────────────── */
 html, body, #root { height: 100%; }
@@ -30,6 +73,10 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overscroll-behavior-y: none;
+  transition: background-color .2s ease, color .2s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  body, .press, .anim-in, .anim-pop { transition: none !important; animation: none !important; }
 }
 .font-mono { font-family: 'Geist Mono', ui-monospace, monospace; }
 
@@ -59,11 +106,11 @@ button { -webkit-tap-highlight-color: transparent; }
 .hairline { border-color: var(--line); }
 
 /* progress bar */
-.pbar { background: #ececec; border-radius: 999px; overflow: hidden; }
+.pbar { background: var(--line); border-radius: 999px; overflow: hidden; }
 .pbar > div { height: 100%; background: var(--ink); transition: width .35s ease; }
 
 /* selectable pill */
-.chip { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--ink-soft); background: #fff; }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--ink-soft); background: var(--surface); }
 .chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
 
 /* tap target safety */
@@ -76,7 +123,7 @@ button { -webkit-tap-highlight-color: transparent; }
 /* checkbox */
 .check {
   width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid var(--line-strong);
-  display: inline-flex; align-items: center; justify-content: center; background: #fff;
+  display: inline-flex; align-items: center; justify-content: center; background: var(--surface-input);
 }
 .check.on { background: var(--ink); border-color: var(--ink); color: #fff; }
 
@@ -88,7 +135,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* toast */
-.toast { background: var(--ink); color: #fff; border-radius: 14px; padding: 12px 16px; font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+.toast { background: var(--ink); color: var(--bg); border-radius: 14px; padding: 12px 16px; font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
 
 /* ─── Animaciones ──────────────────────────────────────────────────────── */
 @keyframes slideUp { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

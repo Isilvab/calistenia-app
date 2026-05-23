@@ -70,4 +70,5 @@ export const I = {
   list:      (p: IconProps) => <IconBase {...p}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></IconBase>,
   info:      (p: IconProps) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></IconBase>,
   stretch:   (p: IconProps) => <IconBase {...p}><circle cx="12" cy="4" r="2"/><path d="M12 6v6"/><path d="M9 9l6 0"/><path d="M12 12l-3 5"/><path d="M12 12l3 5"/><path d="M9 17l-2 3"/><path d="M15 17l2 3"/></IconBase>,
+  logOut:    (p: IconProps) => <IconBase {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></IconBase>,
 }

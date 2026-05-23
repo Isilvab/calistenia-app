@@ -14,13 +14,13 @@ export function Input({ label, hint, suffix, prefix, className = "", containerCl
       {label && (
         <div className="text-xs text-[var(--muted)] mb-1.5 font-medium uppercase tracking-wide">{label}</div>
       )}
-      <div className="flex items-center bg-white border border-[var(--line)] rounded-xl px-3 h-12 focus-within:border-[var(--ink)] transition-colors">
-        {prefix && <span className="text-[var(--muted)] text-sm pr-2">{prefix}</span>}
+      <div className="flex items-center bg-[var(--surface-input)] border border-[var(--line)] rounded-xl px-3 h-12 focus-within:border-[var(--ink)] transition-colors">
+        {prefix && <span className="text-[var(--muted)] text-sm pr-2 flex-shrink-0">{prefix}</span>}
         <input
-          className={`flex-1 bg-transparent outline-none text-[15px] placeholder:text-[var(--muted)] ${className}`}
+          className={`flex-1 min-w-0 bg-transparent outline-none text-[15px] text-[var(--ink)] placeholder:text-[var(--muted)] ${className}`}
           {...rest}
         />
-        {suffix && <span className="text-[var(--muted)] text-sm pl-2">{suffix}</span>}
+        {suffix && <span className="text-[var(--muted)] text-sm pl-2 flex-shrink-0">{suffix}</span>}
       </div>
       {hint && <div className="text-xs text-[var(--muted)] mt-1.5">{hint}</div>}
     </label>

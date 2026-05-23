@@ -10,16 +10,15 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/',          label: 'Inicio',    icon: I.home },
-  { to: '/entrenar',  label: 'Entrenar',  icon: I.dumbbell },
-  { to: '/nutricion', label: 'Nutrición', icon: I.apple },
-  { to: '/progreso',  label: 'Progreso',  icon: I.trending },
-  { to: '/ajustes',   label: 'Ajustes',   icon: I.settings },
+  { to: '/',         label: 'Inicio',   icon: I.home },
+  { to: '/entrenar', label: 'Entrenar', icon: I.dumbbell },
+  { to: '/progreso', label: 'Progreso', icon: I.trending },
+  { to: '/ajustes',  label: 'Ajustes',  icon: I.settings },
 ]
 
 export default function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur border-t border-[var(--line)] pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#1c1c1c]/95 backdrop-blur border-t border-[var(--line)] pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around">
         {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
           <NavLink

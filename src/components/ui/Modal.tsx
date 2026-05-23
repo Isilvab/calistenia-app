@@ -16,7 +16,7 @@ export function Modal({ open, onClose, children, title }: ModalProps) {
     >
       <div className="absolute inset-0 bg-black/40" />
       <div
-        className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl p-5 anim-in"
+        className="relative w-full sm:max-w-md bg-white text-[#0c0c0c] rounded-t-3xl sm:rounded-3xl p-5 anim-in"
         onClick={(e: MouseEvent<HTMLDivElement>) => e.stopPropagation()}
       >
         {title && <div className="text-lg font-semibold mb-2">{title}</div>}

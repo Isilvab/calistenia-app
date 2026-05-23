@@ -2,10 +2,10 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { getStorage } from "@/lib/storage"
 import { todayKey, formatDate, getWeekDays } from "@/lib/utils"
-import { getSessionForDay, isDeloadWeek, MOBILITY, QUOTES } from "@/data"
-import type { Session as DataSession } from "@/data"
-import { Card, Button, SectionHeader, ProgressBar, I } from "@/components/ui"
-import type { Profile, RoutineState, Session as LogSession, Nutrition as NutritionData, Mobility as MobilityData } from "@/types"
+import { MOBILITY, QUOTES } from "@/data"
+import { Card, Button, SectionHeader, I, Spinner } from "@/components/ui"
+import type { Profile, Session as LogSession, Mobility as MobilityData } from "@/types"
+import { useRutinaDraftStore } from "@/store/rutinaDraftStore"
 
 interface CompareRow {
   name: string
@@ -54,27 +54,25 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [routine, setRoutine] = useState<RoutineState>({ bloque_actual: 1, semana_actual: 1, dia_actual: 1 })
   const [sessions, setSessions] = useState<Record<string, LogSession>>({})
   const [mobilityToday, setMobilityToday] = useState<MobilityData | null>(null)
-  const [nutritionToday, setNutritionToday] = useState<NutritionData | null>(null)
   const [quote, setQuote] = useState('')
+  const [rutinaCount, setRutinaCount] = useState(0)
+  const clearDraft = useRutinaDraftStore(s => s.clearDraft)
 
   useEffect(() => {
     async function load() {
       try {
         const storage = getStorage()
-        const [prof, routine_, mob, nut, allSessions] = await Promise.all([
+        const [prof, mob, allSessions, rutinas] = await Promise.all([
           storage.getProfile(),
-          storage.getRoutineState(),
           storage.getMobility(today),
-          storage.getNutrition(today),
           storage.listSessions(),
+          storage.listRutinas(),
         ])
         if (prof) setProfile(prof)
-        if (routine_) setRoutine(routine_)
         setMobilityToday(mob)
-        setNutritionToday(nut)
+        setRutinaCount(rutinas.length)
 
         const sessMap: Record<string, LogSession> = {}
         for (const { date, session } of allSessions) {
@@ -93,13 +91,8 @@ export default function Dashboard() {
     load()
   }, [today])
 
-  if (loading) return <div className="p-4 text-gray-500">Cargando...</div>
-  if (error) return <div className="p-4 text-red-600">{error}</div>
-
-  const pesoKg = profile?.peso_kg ?? 75
-  const goalP = profile?.objetivo_proteina_g ?? Math.round(pesoKg * 1.8)
-  const protein = nutritionToday?.proteina_g ?? 0
-  const mobDone = mobilityToday?.completada === true
+  if (loading) return <div className="flex items-center justify-center p-16"><Spinner size={36}/></div>
+  if (error) return <div className="p-4 text-[var(--bad)]">{error}</div>
 
   const measurements = profile?.measurements ?? []
   const last = measurements[measurements.length - 1]
@@ -115,14 +108,9 @@ export default function Dashboard() {
     }
   }
 
-  const weekDone = weekDays.filter(k => {
-    const s = sessions[k]
-    return s && s.tipo_sesion && s.tipo_sesion !== 'rest'
-  }).length
+  const mobDone = mobilityToday?.completada === true
 
-  const todaySession: DataSession = getSessionForDay(routine.bloque_actual, routine.dia_actual)
   const recentCompare = computeRecentCompare(sessions)
-  const deload = isDeloadWeek(routine.semana_actual)
 
   return (
     <div className="px-4 pt-4 pb-28 anim-in">
@@ -132,46 +120,20 @@ export default function Dashboard() {
           <div className="text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] font-medium">Hoy · {today.split('-').reverse().join('/')}</div>
           <div className="text-[26px] font-semibold leading-tight tracking-tight">Hola{profile?.nombre ? `, ${profile.nombre}` : ''}.</div>
         </div>
-        <button onClick={() => navigate('/ajustes')} className="press w-10 h-10 rounded-full bg-white border border-[var(--line)] flex items-center justify-center">
+        <button onClick={() => navigate('/ajustes')} className="press w-10 h-10 rounded-full bg-[var(--surface)] border border-[var(--line)] flex items-center justify-center">
           <I.user size={18}/>
         </button>
       </div>
 
-      {/* Suggested session */}
-      <Card className="!p-0 overflow-hidden bg-[var(--ink)] !border-[var(--ink)]">
+      {/* Empezar entrenamiento */}
+      <Card className="!p-0 overflow-hidden !bg-[var(--surface-feature)] !border-[var(--surface-feature)]">
         <div className="p-5 text-white">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-[11px] uppercase tracking-[0.14em] text-white/60 font-medium">Sesión de hoy · B{routine.bloque_actual} · S{routine.semana_actual}</div>
-            <div className="text-[11px] uppercase tracking-[0.14em] text-[var(--accent)] font-medium">{weekDone}/6 entrenos · semana</div>
-          </div>
-          <div className="text-[28px] font-semibold leading-tight">{todaySession.name}</div>
-          <div className="text-white/70 text-sm mt-1">{todaySession.focus}</div>
-
-          {todaySession.rest ? (
-            <Button variant="soft" size="lg" className="mt-5 !bg-white/10 !text-white !border-white/10 hover:!bg-white/20" onClick={() => navigate('/movilidad')} iconRight={<I.arrowR size={18}/>}>
-              Movilidad y descanso
-            </Button>
-          ) : (
-            <div className="flex gap-2 mt-5">
-              <Button variant="accent" size="lg" className="flex-1" icon={<I.play size={18}/>} onClick={() => navigate('/entrenar')}>
-                Empezar
-              </Button>
-              <Button variant="soft" size="lg" className="!bg-white/10 !text-white !border-white/10 hover:!bg-white/20" icon={<I.list size={18}/>} onClick={() => navigate('/rutinas')}>
-                Ver
-              </Button>
-            </div>
-          )}
-        </div>
-        <div className="px-5 py-3 bg-white/[0.06] border-t border-white/10 flex items-center gap-3 text-white/70 text-xs">
-          <div className="flex items-center gap-1.5"><I.bolt size={14}/> 25 min</div>
-          <div className="w-px h-3 bg-white/15"/>
-          <div>{todaySession.exercises?.length ?? 0} ejercicios</div>
-          {deload && (
-            <>
-              <div className="w-px h-3 bg-white/15"/>
-              <div className="text-[var(--accent)]">Deload</div>
-            </>
-          )}
+          <div className="text-[11px] uppercase tracking-[0.14em] text-white/60 font-medium mb-2">Entrenar</div>
+          <div className="text-[28px] font-semibold leading-tight">Empezar entrenamiento</div>
+          <div className="text-white/70 text-sm mt-1">Elegí una de tus rutinas y arrancá.</div>
+          <Button variant="accent" size="lg" className="mt-4" icon={<I.play size={18}/>} onClick={() => navigate('/entrenar')}>
+            Empezar
+          </Button>
         </div>
       </Card>
 
@@ -182,30 +144,13 @@ export default function Dashboard() {
           const done = s && s.tipo_sesion && s.tipo_sesion !== 'rest'
           const isToday = k === today
           return (
-            <div key={k} className={`rounded-xl py-2 px-1 text-center text-[10px] ${isToday ? 'bg-[var(--ink)] text-white' : 'bg-white border border-[var(--line)]'}`}>
-              <div className="opacity-60 uppercase tracking-wider">{['L','M','M','J','V','S','D'][i]}</div>
-              <div className={`mx-auto mt-1 w-2 h-2 rounded-full ${done ? 'bg-[var(--accent)]' : isToday ? 'bg-white/30' : 'bg-[var(--line-strong)]'}`}/>
+            <div key={k} className={`rounded-xl py-2 px-1 text-center text-[10px] text-[var(--ink)] ${isToday ? 'bg-[var(--surface)] border-2 border-[var(--ink)]' : 'bg-[var(--surface)] border border-[var(--line)]'}`}>
+              <div className={`uppercase tracking-wider ${isToday ? 'font-semibold' : 'opacity-60'}`}>{['L','M','M','J','V','S','D'][i]}</div>
+              <div className={`mx-auto mt-1 w-2 h-2 rounded-full ${done ? 'bg-[var(--accent)]' : 'bg-[var(--line-strong)]'}`}/>
             </div>
           )
         })}
       </div>
-
-      {/* Protein */}
-      <SectionHeader kicker="Nutrición" title="Proteína de hoy" right={
-        <button className="text-xs text-[var(--muted)] press" onClick={() => navigate('/nutricion')}>Abrir →</button>
-      }/>
-      <Card>
-        <div className="flex items-end justify-between mb-2">
-          <div>
-            <div className="text-[34px] font-semibold leading-none font-mono tracking-tight">{protein}<span className="text-[var(--muted)] text-base font-normal">/{goalP} g</span></div>
-            <div className="text-xs text-[var(--muted)] mt-1">{Math.max(0, goalP - protein)} g restantes · {nutritionToday?.comidas?.length ?? 0} comidas</div>
-          </div>
-          <div className="flex gap-1.5">
-            <Button size="sm" variant="soft" onClick={() => navigate('/nutricion')} icon={<I.plus size={14}/>}>25g</Button>
-          </div>
-        </div>
-        <ProgressBar value={protein} max={goalP} color="var(--ink)"/>
-      </Card>
 
       {/* Weight */}
       <SectionHeader kicker="Progreso" title="Peso corporal" right={
@@ -251,6 +196,26 @@ export default function Dashboard() {
         </>
       )}
 
+      {/* Mis rutinas */}
+      <SectionHeader kicker="Rutinas" title="Mis rutinas custom" right={
+        <button className="text-xs text-[var(--muted)] press" onClick={() => navigate('/mis-rutinas')}>Ver todas →</button>
+      }/>
+      <Card>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[15px] font-medium">{rutinaCount > 0 ? `${rutinaCount} rutina${rutinaCount !== 1 ? 's' : ''} guardada${rutinaCount !== 1 ? 's' : ''}` : 'Sin rutinas custom aún'}</div>
+            <div className="text-xs text-[var(--muted)] mt-0.5">Crea y guarda tus propias rutinas</div>
+          </div>
+          <button
+            onClick={() => { clearDraft(); navigate('/rutinas/nueva') }}
+            className="press flex items-center gap-1.5 text-[12px] px-3 py-2 rounded-xl bg-[var(--surface-feature)] dark:bg-[#1e1e1e] text-white"
+          >
+            <I.plus size={13}/>
+            Nueva
+          </button>
+        </div>
+      </Card>
+
       {/* Mobility */}
       <SectionHeader kicker="Movilidad" title="Rutina de 5 min" right={
         <button className="text-xs text-[var(--muted)] press" onClick={() => navigate('/movilidad')}>Abrir →</button>
@@ -261,7 +226,7 @@ export default function Dashboard() {
             <div className="text-[15px] font-medium">{mobDone ? 'Completada hoy' : 'Pendiente hoy'}</div>
             <div className="text-xs text-[var(--muted)] mt-0.5">{MOBILITY.length} ejercicios · 5 min</div>
           </div>
-          <button onClick={() => navigate('/movilidad')} className={`press w-12 h-12 rounded-2xl flex items-center justify-center ${mobDone ? 'bg-[var(--accent)] text-[var(--ink)]' : 'bg-[var(--ink)] text-white'}`}>
+          <button onClick={() => navigate('/movilidad')} className={`press w-12 h-12 rounded-2xl flex items-center justify-center ${mobDone ? 'bg-[var(--accent)] text-[var(--surface-feature)]' : 'bg-[var(--surface-feature)] dark:bg-[#1e1e1e] text-white'}`}>
             {mobDone ? <I.check size={20}/> : <I.play size={18}/>}
           </button>
         </div>

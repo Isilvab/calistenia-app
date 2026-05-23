@@ -19,11 +19,11 @@ const sizes: Record<ButtonSize, string> = {
 }
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-[var(--ink)] text-white hover:bg-black",
-  accent:  "bg-[var(--accent)] text-[var(--ink)] hover:brightness-95",
+  primary: "bg-[var(--ink)] text-[var(--bg)] hover:brightness-95",
+  accent:  "bg-[var(--accent)] text-[var(--accent-ink)] hover:brightness-95",
   soft:    "bg-[var(--bg)] text-[var(--ink)] hover:bg-[var(--line)] border border-[var(--line)]",
   ghost:   "bg-transparent text-[var(--ink)] hover:bg-[var(--line)]",
-  outline: "bg-white text-[var(--ink)] border border-[var(--line-strong)] hover:bg-[var(--bg)]",
+  outline: "bg-[var(--surface)] text-[var(--ink)] border border-[var(--line-strong)] hover:bg-[var(--bg)]",
   danger:  "bg-[var(--bad)] text-white hover:brightness-95",
 }
 

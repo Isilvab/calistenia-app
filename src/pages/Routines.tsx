@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { getStorage } from "@/lib/storage"
 import { isDeloadWeek } from "@/lib/utils"
 import { TRAINING_PROGRAM, PROGRESSION_RULES } from "@/data"
-import { Card, Button, SectionHeader, I } from "@/components/ui"
+import { Card, Button, SectionHeader, I, Spinner } from "@/components/ui"
 import type { RoutineState } from "@/types"
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
@@ -17,6 +18,7 @@ function DemoButton({ name: _name }: { name: string }) {
 }
 
 export default function Routines() {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [routineState, setRoutineState] = useState<RoutineState | null>(null)
@@ -48,7 +50,7 @@ export default function Routines() {
     setRoutineState(next)
   }
 
-  if (loading) return <div className="p-4 text-gray-500">Cargando...</div>
+  if (loading) return <div className="flex items-center justify-center p-16"><Spinner size={36}/></div>
   if (error) return <div className="p-4 text-red-600">{error}</div>
   if (!routineState) return null
 
@@ -56,23 +58,53 @@ export default function Routines() {
 
   return (
     <div className="px-4 pt-4 pb-28 anim-in">
-      <div className="mb-1 text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] font-medium">Programa</div>
-      <div className="text-[26px] font-semibold tracking-tight">12 semanas · calistenia</div>
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="mb-1 text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] font-medium">Programa</div>
+          <div className="text-[26px] font-semibold tracking-tight">12 semanas · calistenia</div>
+        </div>
+        <div className="flex gap-2 mt-1">
+          <button
+            onClick={() => navigate('/rutinas/nueva')}
+            className="press flex items-center gap-1.5 text-[12px] px-3 py-2 rounded-xl bg-[var(--ink)] text-[var(--bg)]"
+          >
+            <I.plus size={13}/>
+            Nueva
+          </button>
+          <button
+            onClick={() => navigate('/buscar')}
+            className="press flex items-center gap-1.5 text-[12px] px-3 py-2 rounded-xl border border-[var(--line)] bg-white text-[var(--on-light)]"
+          >
+            <I.bolt size={13}/>
+            Ejercicios
+          </button>
+        </div>
+      </div>
       <div className="text-sm text-[var(--muted)] mt-1">3 bloques de 4 semanas. Split push/pull/piernas A·B + descanso. 25 min por sesión.</div>
+      <button
+        onClick={() => navigate('/mis-rutinas')}
+        className="press mt-3 w-full flex items-center justify-between px-4 py-3 rounded-xl border border-[var(--line)] bg-white text-[var(--on-light)]"
+      >
+        <span className="flex items-center gap-2 text-[13px] font-medium">
+          <I.list size={15}/>
+          Mis rutinas custom
+        </span>
+        <I.chevR size={15} className="text-[var(--muted)]"/>
+      </button>
 
       {/* Where am I */}
-      <Card className="mt-4 !p-4 bg-[var(--ink)] !border-[var(--ink)] text-white">
+      <Card className="mt-4 !p-4 bg-[var(--ink)] !border-[var(--ink)] text-[var(--bg)]">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.14em] text-white/60 font-medium">Estás en</div>
+            <div className="text-[11px] uppercase tracking-[0.14em] text-[var(--bg)]/60 font-medium">Estás en</div>
             <div className="text-[18px] font-semibold mt-0.5">Bloque {routine.bloque_actual} · Semana {routine.semana_actual} · Día {routine.dia_actual}</div>
-            <div className="text-xs text-white/60 mt-0.5">
+            <div className="text-xs text-[var(--bg)]/60 mt-0.5">
               {TRAINING_PROGRAM[routine.bloque_actual-1].subtitle}
               {isDeloadWeek(routine.bloque_actual, routine.semana_actual) && ' · Semana de deload'}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-semibold font-mono">{routine.semana_actual}<span className="text-white/40 text-base">/12</span></div>
+            <div className="text-3xl font-semibold font-mono">{routine.semana_actual}<span className="text-[var(--bg)]/40 text-base">/12</span></div>
           </div>
         </div>
       </Card>
@@ -88,7 +120,7 @@ export default function Routines() {
               className="press w-full text-left card flex items-center justify-between"
             >
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-semibold font-mono ${active ? 'bg-[var(--accent)] text-[var(--ink)]' : 'bg-[var(--bg)] text-[var(--ink-soft)]'}`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-semibold font-mono ${active ? 'bg-[var(--accent)] text-[var(--accent-ink)]' : 'bg-[var(--bg)] text-[var(--ink-soft)]'}`}>
                   B{block.id}
                 </div>
                 <div>
@@ -138,7 +170,6 @@ export default function Routines() {
                                   </div>
                                   <div className="text-xs text-[var(--muted)] mt-1 flex flex-wrap gap-x-3 gap-y-1">
                                     <span>{ex.sets} × {ex.repsLabel}</span>
-                                    <span>RIR {ex.rir}</span>
                                     <span>desc {ex.restSec}s</span>
                                   </div>
                                   {ex.note && <div className="text-xs italic text-[var(--muted)] mt-1">{ex.note}</div>}

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { getStorage } from "@/lib/storage"
 import { todayKey } from "@/lib/utils"
 import { MOBILITY } from "@/data"
-import { Card, Button, SectionHeader, I, useToast } from "@/components/ui"
+import { Card, Button, SectionHeader, I, useToast, Spinner } from "@/components/ui"
 import type { Mobility as MobilityData } from "@/types"
 
 interface StreakDay {
@@ -88,7 +88,7 @@ export default function Mobility() {
     await handleUpdate({ completada: false, items: {} })
   }
 
-  if (loading) return <div className="p-4 text-gray-500">Cargando...</div>
+  if (loading) return <div className="flex items-center justify-center p-16"><Spinner size={36}/></div>
   if (error) return <div className="p-4 text-red-600">{error}</div>
 
   const items = MOBILITY
@@ -142,10 +142,10 @@ export default function Mobility() {
       {/* Streak */}
       <SectionHeader kicker="Constancia" title="Últimos 14 días"/>
       <Card>
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(14, 1fr)' }}>
           {streakDays.map((d, i) => (
             <div key={i} title={d.key}
-              className={`flex-1 min-w-[10%] aspect-square rounded-lg ${d.done ? 'bg-[var(--ink)]' : 'bg-[var(--bg)] border border-[var(--line)]'}`}/>
+              className={`aspect-square rounded-md ${d.done ? 'bg-[var(--accent)]' : 'bg-[var(--surface)] border border-[var(--line)]'}`}/>
           ))}
         </div>
         <div className="mt-3 text-xs text-[var(--muted)]">

@@ -9,6 +9,7 @@ import type {
   Nutrition,
   Mobility,
   AppSettings,
+  Rutina,
 } from '@/types'
 
 export interface StorageAdapter {
@@ -26,6 +27,7 @@ export interface StorageAdapter {
   saveSession(date: string, session: Session): Promise<void>
   listSessions(fromDate?: string, toDate?: string): Promise<Array<{ date: string; session: Session }>>
   deleteSession(date: string): Promise<void>
+  getUltimaSesionDeRutina(rutina_id: string): Promise<Session | null>
 
   // ── Nutrición ────────────────────────────────────────────────────────────────
   getNutrition(date: string): Promise<Nutrition | null>
@@ -39,6 +41,12 @@ export interface StorageAdapter {
   // ── Configuración ────────────────────────────────────────────────────────────
   getSettings(): Promise<AppSettings>
   setSettings(s: AppSettings): Promise<void>
+
+  // ── Rutinas custom ───────────────────────────────────────────────────────────
+  listRutinas(): Promise<Rutina[]>
+  getRutina(id: string): Promise<Rutina | null>
+  saveRutina(rutina: Rutina): Promise<void>     // upsert por id; si id vacío, genera uno
+  deleteRutina(id: string): Promise<void>
 
   // ── Genéricos de bajo nivel ──────────────────────────────────────────────────
   // Para datos no estándar (exercisedb cache, etc.) sin extender la interfaz.
